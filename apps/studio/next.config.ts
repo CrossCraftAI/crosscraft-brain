@@ -22,6 +22,15 @@ const nextConfig: NextConfig = {
     '@crosscraft/nodes-farm',
   ],
   serverExternalPackages: ['pg'],
+  // Dev: proxy all /api/* calls to the Go backend (single source of truth for the
+  // contract). beforeFiles runs before the filesystem, so it shadows the legacy
+  // Next API routes. Override the target with GO_API_URL if needed.
+  async rewrites() {
+    const go = process.env.GO_API_URL ?? 'http://localhost:8080';
+    return {
+      beforeFiles: [{ source: '/api/:path*', destination: `${go}/api/:path*` }],
+    };
+  },
 };
 
 export default nextConfig;
