@@ -25,6 +25,8 @@ func Nodes() []schema.NodeDefinition {
 		Gmail("https://gmail.googleapis.com/gmail/v1").Build(),
 		Calendar("https://www.googleapis.com/calendar/v3").Build(),
 		Drive("https://www.googleapis.com/drive/v3").Build(),
+		DriveUpload(uploadBaseProd),
+		DriveDownload(driveAPIProd),
 	}
 }
 
