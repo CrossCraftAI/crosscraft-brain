@@ -15,6 +15,61 @@ Root cause: React Flow / shadcn props, not Tailwind classes, so the rebrand swee
 
 ---
 
+## Quality & Hardening (from audit 2026-06-23)
+
+Items identified in the Phase 6 audit that aren't feature work but improve
+correctness, security, and maintainability before production deployment.
+
+### Bugs / fragile paths
+
+- [ ] **REST `context.Background()` lacks timeout** — `server/internal/rest/rest.go:181`
+      uses a raw background context for HTTP calls. A hanging REST call leaks a
+      goroutine forever. Replace with `context.WithTimeout(context.Background(),
+      30*time.Second)` or plumb `ExecContext` cancellation through.
+- [ ] **FCM push: fragile SA JSON fallback** — `server/internal/nodes/core/mobile.go:148-152`
+      falls back to `json.Marshal(cred)` of the entire credential map when
+      `service_account_json` is empty, producing malformed service-account JSON.
+      Remove the fallback or scope it to only the relevant SA fields.
+- [ ] **`constantTimeEq` dead code** — `server/internal/auth/auth.go:158-160` is
+      defined but never called. SHA-256 hash comparison is already constant-time;
+      remove the unused function.
+
+### Observability / robustness
+
+- [ ] **SSE stream: send timeout event on loop exit** — `server/internal/api/api.go:378-399`
+      exits silently after 600 iterations (~7 min). Send a `{"status": "timeout"}`
+      event so the client knows the stream ended intentionally, not from a crash.
+- [ ] **OAuth2 state map: periodic cleanup** — `server/internal/oauth/oauth.go:45`
+      only cleans expired states when new states are added. A long-idle server
+      accumulates stale entries. Add a periodic cleanup goroutine or TTL-based map.
+- [ ] **Log suppressed I/O errors** — several `_ =` sites in `api.go`
+      (file close, response write, JSON marshal in SSE loop). At minimum log them
+      at DEBUG level so production incidents have breadcrumbs.
+
+### Testing gaps
+
+- [ ] **`crypto` package** — encrypt/decrypt round-trip test
+- [ ] **`expr` package** — `ResolveValue` edge cases: nested `{{ }}`, `$now`,
+      `$node()`, typed returns vs string interpolation
+- [ ] **`auth` package** — key generation, validation, revocation, middleware
+      (valid key, invalid key, missing key, `AUTH_REQUIRED` mode)
+- [ ] **`id` package** — format validation, collision check
+- [ ] **`credtype` package** — registration and lookup smoke test
+- [ ] **`scheduler` fire-loop** — the `due()` function is tested; the tick loop is not
+- [ ] **Store** — concurrent `ClaimWaiting` (two goroutines racing on same execution)
+- [ ] **Frontend** — no Jest/Vitest tests in `apps/web`
+- [ ] **Stress / concurrency** — worker pool under load, multiple instances sharing
+      Postgres
+
+### Docs / process
+
+- [ ] **Create `CLAUDE.md`** at repo root for AI-assisted development
+      (the `BUILD.md` referenced in `main.go:2` was deleted in `ed8c348`)
+- [ ] **Document `mobile_schema.sql` setup** in README — currently requires
+      manual `pnpm db:migrate db/mobile_schema.sql`; not auto-applied
+
+---
+
 ## Mobile / Client Track — the crosscraft engine as a mobile backend
 
 Rationale: crosscraft's Go binary is a **highly efficient, single-binary workflow
