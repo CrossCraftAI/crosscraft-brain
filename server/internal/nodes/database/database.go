@@ -3,7 +3,9 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
+	"time"
 
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/schema"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +17,7 @@ func PostgresNode() schema.NodeDefinition {
 		Type:        "database.postgres",
 		Label:       "PostgreSQL",
 		Description: "Query or execute commands on a PostgreSQL database.",
-		Group:       "storage",
+		Group:       "integration",
 		Icon:        "Database",
 		Inputs:      []schema.Port{{ID: "main"}},
 		Outputs:     []schema.Port{{ID: "main", Label: "Results"}, {ID: "error", Label: "Error"}},
@@ -61,7 +63,13 @@ func resolvePostgresDSN(ctx *schema.ExecContext) (string, error) {
 				if port == "" {
 					port = "5432"
 				}
-				return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, password, host, port, dbname), nil
+				u := url.URL{
+					Scheme: "postgres",
+					User:   url.UserPassword(user, password),
+					Host:   fmt.Sprintf("%s:%s", host, port),
+					Path:   dbname,
+				}
+				return u.String(), nil
 			}
 		}
 	}
@@ -79,8 +87,10 @@ func executePostgres(ctx *schema.ExecContext) (schema.NodeResult, error) {
 		return schema.NodeResult{}, err
 	}
 
-	// 2. Connect to the database
-	conn, err := pgx.Connect(context.Background(), dsn)
+	// 2. Connect to the database with a timeout.
+	queryCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	conn, err := pgx.Connect(queryCtx, dsn)
 	if err != nil {
 		return schema.NodeResult{}, fmt.Errorf("postgres: unable to connect to database: %w", err)
 	}
@@ -88,8 +98,8 @@ func executePostgres(ctx *schema.ExecContext) (schema.NodeResult, error) {
 
 	// 3. Get query and parameters
 	query, _ := ctx.Params["query"].(string)
-	rawParams, _ := ctx.Params["params"]
-	queryParams, _ := rawParams.([]any)
+	rawParams := ctx.Params["params"]
+	queryParams, _ := rawParams.([]any) // ok to be nil; pgx handles zero params
 
 	operation, _ := ctx.Params["operation"].(string)
 	out := make([]schema.Item, 0)
@@ -97,7 +107,7 @@ func executePostgres(ctx *schema.ExecContext) (schema.NodeResult, error) {
 	// 4. Execute based on operation
 	switch operation {
 	case "query:many":
-		rows, err := conn.Query(context.Background(), query, queryParams...)
+		rows, err := conn.Query(queryCtx, query, queryParams...)
 		if err != nil {
 			return schema.NodeResult{}, fmt.Errorf("postgres query failed: %w", err)
 		}
@@ -120,7 +130,7 @@ func executePostgres(ctx *schema.ExecContext) (schema.NodeResult, error) {
 		}
 
 	case "query:one":
-		rows, err := conn.Query(context.Background(), query, queryParams...)
+		rows, err := conn.Query(queryCtx, query, queryParams...)
 		if err != nil {
 			return schema.NodeResult{}, fmt.Errorf("postgres query failed: %w", err)
 		}
@@ -143,7 +153,7 @@ func executePostgres(ctx *schema.ExecContext) (schema.NodeResult, error) {
 		}
 
 	case "exec":
-		cmdTag, err := conn.Exec(context.Background(), query, queryParams...)
+		cmdTag, err := conn.Exec(queryCtx, query, queryParams...)
 		if err != nil {
 			return schema.NodeResult{}, fmt.Errorf("postgres exec failed: %w", err)
 		}
