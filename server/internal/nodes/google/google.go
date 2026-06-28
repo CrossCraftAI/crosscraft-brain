@@ -1,8 +1,9 @@
 // Package google provides Google Workspace integration nodes (Sheets, Gmail,
-// Calendar, Drive) built on the declarative REST framework. They authenticate with
-// a googleOAuth2Api credential; the engine's OAuth2 client provider injects and
-// auto-refreshes the access token. Each service is one node with its own base URL;
-// the builders take the base URL so tests can point them at a mock server.
+// Calendar, Drive, Docs, Slides, Contacts, Tasks, Forms, Chat) built on the
+// declarative REST framework. They authenticate with a googleOAuth2Api credential;
+// the engine's OAuth2 client provider injects and auto-refreshes the access token.
+// Each service is one node with its own base URL; the builders take the base URL
+// so tests can point them at a mock server.
 package google
 
 import (
@@ -21,10 +22,16 @@ func str(name, label string, required bool) schema.ParamSchema {
 // Nodes returns the Google node pack wired to the production endpoints.
 func Nodes() []schema.NodeDefinition {
 	return []schema.NodeDefinition{
-		SheetsNode(""), // SDK default: https://sheets.googleapis.com/
-		GmailNode(""), // SDK default: https://gmail.googleapis.com/
+		SheetsNode(""),   // SDK default: https://sheets.googleapis.com/
+		GmailNode(""),    // SDK default: https://gmail.googleapis.com/
 		CalendarNode(""), // SDK default: https://www.googleapis.com/calendar/v3/
-		DriveNode(""),
+		DriveNode(""),    // SDK default: https://www.googleapis.com/drive/v3/
+		DocsNode(""),     // SDK default: https://docs.googleapis.com/
+		SlidesNode(""),   // SDK default: https://slides.googleapis.com/
+		ContactsNode(""), // SDK default: https://people.googleapis.com/
+		TasksNode(""),    // SDK default: https://tasks.googleapis.com/
+		FormsNode(""),    // SDK default: https://forms.googleapis.com/
+		ChatNode(""),     // SDK default: https://chat.googleapis.com/
 	}
 }
 

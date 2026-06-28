@@ -87,8 +87,8 @@ func TestCalendarListEvents(t *testing.T) {
 // node exposes the credential + operation params.
 func TestNodesRegisterable(t *testing.T) {
 	nodes := Nodes()
-	if len(nodes) != 4 {
-		t.Fatalf("expected 4 google nodes, got %d", len(nodes))
+	if len(nodes) != 10 {
+		t.Fatalf("expected 10 google nodes, got %d", len(nodes))
 	}
 	for _, n := range nodes {
 		if len(n.Params) == 0 || n.Params[0].Type != "credential" {

@@ -33,7 +33,8 @@ func Nodes() []schema.NodeDefinition {
 		HubSpot().Build(),
 		SendGrid().Build(),
 		Pipedrive().Build(),
-		Mailchimp(),
+			Mailchimp(),
+		Salesforce("https://login.salesforce.com").Build(),
 	}
 }
 

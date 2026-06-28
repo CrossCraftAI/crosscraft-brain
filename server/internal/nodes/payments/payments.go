@@ -19,7 +19,9 @@ func jp(name, label string) schema.ParamSchema {
 // Nodes returns the full payments node pack.
 func Nodes() []schema.NodeDefinition {
 	return []schema.NodeDefinition{
-		Stripe().Build(),
+			Stripe().Build(),
+		PayPal("https://api-m.paypal.com").Build(),
+		Square("https://connect.squareup.com").Build(),
 	}
 }
 

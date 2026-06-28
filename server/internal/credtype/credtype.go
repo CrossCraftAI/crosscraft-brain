@@ -117,6 +117,10 @@ func Default() *Registry {
 			Name: "adobeOAuth2Api", DisplayName: "Adobe IMS (Server-to-Server)", Fields: clientFields,
 			OAuth2: &OAuth2{TokenURL: "https://ims-na1.adobelogin.com/ims/token/v3", GrantType: "client_credentials"},
 		},
+		// ── Adobe Commerce ──────────────────────────────────────────────────────
+		Type{Name: "adobeCommerceApi", DisplayName: "Adobe Commerce (Magento) Access Token", Fields: []Field{
+			{Name: "accessToken", Label: "Access Token", Type: "password", Required: true},
+		}},
 		// ── Communication ───────────────────────────────────────────────────────
 		Type{Name: "slackApi", DisplayName: "Slack (Bot Token)", Fields: []Field{
 			{Name: "accessToken", Label: "Bot Token (xoxb-...)", Type: "password", Required: true},
@@ -177,6 +181,44 @@ func Default() *Registry {
 		Type{Name: "stripeApi", DisplayName: "Stripe Secret Key", Fields: []Field{
 			{Name: "accessToken", Label: "Secret Key (sk_live_... or sk_test_...)", Type: "password", Required: true},
 		}},
+		// ── Phase 5: Remaining Integrations ──────────────────────────────────────
+	Type{Name: "salesforceApi", DisplayName: "Salesforce", Fields: clientFields,
+		OAuth2: &OAuth2{
+			AuthURL:    "https://login.salesforce.com/services/oauth2/authorize",
+			TokenURL:   "https://login.salesforce.com/services/oauth2/token",
+			AuthParams: map[string]string{"prompt": "consent"},
+		}},
+	Type{Name: "paypalApi", DisplayName: "PayPal", Fields: clientFields,
+		OAuth2: &OAuth2{
+			AuthURL:  "https://www.paypal.com/connect",
+			TokenURL: "https://api-m.paypal.com/v1/oauth2/token",
+		}},
+	Type{Name: "shopifyApi", DisplayName: "Shopify (Access Token)", Fields: []Field{
+		{Name: "accessToken", Label: "Access Token (shpat_...)", Type: "password", Required: true},
+	}},
+	Type{Name: "quickbooksApi", DisplayName: "QuickBooks Online", Fields: clientFields,
+		OAuth2: &OAuth2{
+			AuthURL:    "https://appcenter.intuit.com/connect/oauth2",
+			TokenURL:   "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+			AuthParams: map[string]string{"prompt": "consent"},
+		}},
+	Type{Name: "xeroApi", DisplayName: "Xero", Fields: clientFields,
+		OAuth2: &OAuth2{
+			AuthURL:  "https://login.xero.com/identity/connect/authorize",
+			TokenURL: "https://identity.xero.com/connect/token",
+		}},
+	Type{Name: "squareApi", DisplayName: "Square (Access Token)", Fields: []Field{
+		{Name: "accessToken", Label: "Access Token (EAAAl...)", Type: "password", Required: true},
+	}},
+	Type{Name: "woocommerceApi", DisplayName: "WooCommerce (API Key)", Fields: []Field{
+		{Name: "accessToken", Label: "Consumer Key:Consumer Secret (base64)", Type: "password", Required: true},
+	}},
+	// ── Cloud / Storage ──────────────────────────────────────────────────────
+		Type{Name: "awsIam", DisplayName: "AWS IAM (Access Key)", Fields: []Field{
+			{Name: "accessKey", Label: "Access Key ID (AKIA...)", Type: "string", Required: true},
+			{Name: "secretKey", Label: "Secret Access Key", Type: "password", Required: true},
+			{Name: "region", Label: "Region", Type: "string", Required: true, Placeholder: "us-east-1"},
+		}},
 		// ── Dev / DevOps ──────────────────────────────────────────────────────────
 		Type{Name: "githubApi", DisplayName: "GitHub (Personal Access Token)", Fields: []Field{
 			{Name: "accessToken", Label: "Personal Access Token", Type: "password", Required: true},
@@ -196,6 +238,34 @@ func Default() *Registry {
 		}},
 		Type{Name: "apiKey", DisplayName: "API Key (Mobile Client)", Fields: []Field{
 			{Name: "accessToken", Label: "API Key (cc_...)", Type: "password", Required: true},
+		}},
+		// ── Azure ──────────────────────────────────────────────────────────────
+		Type{Name: "azureStorage", DisplayName: "Azure Blob Storage (Account Key)", Fields: []Field{
+			{Name: "accountName", Label: "Storage Account Name", Type: "string", Required: true},
+			{Name: "accessKey", Label: "Access Key (Primary or Secondary)", Type: "password", Required: true},
+		}},
+		Type{Name: "azureCosmos", DisplayName: "Azure Cosmos DB (Master Key)", Fields: []Field{
+			{Name: "accountName", Label: "Account Name (or endpoint)", Type: "string", Required: true},
+			{Name: "accessKey", Label: "Primary Master Key", Type: "password", Required: true},
+		}},
+		Type{Name: "mssql", DisplayName: "Microsoft SQL Server", Fields: []Field{
+			{Name: "server", Label: "Server (host:port)", Type: "string", Required: true, Placeholder: "localhost:1433"},
+			{Name: "database", Label: "Database Name", Type: "string", Required: true},
+			{Name: "user", Label: "Username", Type: "string", Required: true},
+			{Name: "password", Label: "Password", Type: "password", Required: true},
+		}},
+		Type{Name: "azurePowerBI", DisplayName: "Azure Power BI (OAuth2)", Fields: clientFields,
+			OAuth2: &OAuth2{
+				AuthURL:    "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+				TokenURL:   "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+				AuthParams: map[string]string{"resource": "https://analysis.windows.net/powerbi/api"},
+			}},
+		Type{Name: "azureDevOps", DisplayName: "Azure DevOps (PAT)", Fields: []Field{
+			{Name: "accessToken", Label: "Personal Access Token (PAT)", Type: "password", Required: true},
+		}},
+		Type{Name: "azureOpenAI", DisplayName: "Azure OpenAI (API Key)", Fields: []Field{
+			{Name: "accessToken", Label: "API Key", Type: "password", Required: true},
+			{Name: "resourceName", Label: "Resource Name", Type: "string", Required: true},
 		}},
 		// ── Database ───────────────────────────────────────────────────────────
 		Type{Name: "postgres", DisplayName: "PostgreSQL", Fields: []Field{

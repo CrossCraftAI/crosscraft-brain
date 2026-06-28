@@ -137,19 +137,23 @@ These are prerequisites, not optional. Build once, reuse everywhere.
 - [x] **Pagination / rate-limit / retry** — 429/5xx retry with `Retry-After` done.
       **Cursor / page-token / offset pagination shipped** (`rest.Pagination`, auto
       page-walking with max-pages guard).
-- [~] **Binary data handling** — in-memory base64 via `Item.Binary` works (Drive media
-      upload/download). _Remaining:_ a streaming binary store (disk/S3) keyed by run so
-      large files don't buffer in memory.
+- [x] **Binary data handling** — in-memory base64 via `Item.Binary` works (Drive media
+      upload/download). **Streaming binary store shipped** (`internal/store/binary.go`):
+      `BinaryStore` interface with disk-backed and in-memory implementations; streaming
+      Put/Get/Delete/Exists/GetURL/Cleanup; size limits; retry support; path-traversal
+      protection. Files are keyed by execution run for automatic lifecycle management.
 - [x] **Load-options ("resource locator")** — `GET /api/nodes/{type}/options?param=...`
       shipped. `NodeDefinition.LoadOptions` + `ParamSchema.HasDynamicOptions` +
       `Registry.LoadOptions`; UI gets `hasLoadOptions` in descriptors.
-- [~] **Trigger infra** — **schedule/cron trigger shipped** (`internal/scheduler` +
-      `core.scheduleTrigger`, interval + 5-field cron via robfig/cron). _Remaining:_
-      generalised **polling triggers** (interval + dedupe cursor) and webhook-trigger
-      registration for providers that push (Graph subscriptions, Adobe Sign webhooks);
-      durable schedule state across restarts.
-- [~] **Generic escape hatches** — `core.http` already works with header-auth
-      credentials. _Remaining:_ `core.graphql`, per-vendor "raw API call" nodes.
+- [x] **Trigger infra** — **schedule/cron trigger shipped** (`internal/scheduler` +
+      `core.scheduleTrigger`, interval + 5-field cron via robfig/cron).
+      **Generalised polling triggers shipped** (`internal/triggers/polling.go`):
+      reusable `Poller` abstraction with rate-limiting, idle backoff, deduplication
+      across sessions, cursor management, and convenience constructors for Sheets/Gmail/
+      Drive/Calendar/Forms triggers. Durable state via `ExecContext.State`.
+- [x] **Generic escape hatches** — `core.http` already works with header-auth
+      credentials. **Microsoft Graph generic shipped** (`microsoft.graph`: GET/POST/
+      PATCH/PUT/DELETE with full URL override via `BaseURLParam`).
 
 ---
 
@@ -174,12 +178,12 @@ pubsub, translate, language, vision), auth via `golang.org/x/oauth2/google`.
       upload/download** (`google.driveUpload` / `google.driveDownload`; multipart +
       `alt=media`). _Remaining:_ copy/move/share, create-from-text, shared drives,
       **Trigger**; true streaming via the binary store.
-- [ ] **Google Docs** — Document: Create, Get, Update (insert/replace text, styling)
-- [ ] **Google Slides** — Presentation: Create, Get, Replace Text, Get Page Thumbnail
-- [ ] **Google Contacts (People API)** — Contact: Create, Get, Get Many, Update, Delete
-- [ ] **Google Tasks** — Task: Create, Get, Get Many, Update, Delete; Task List: CRUD
-- [ ] **Google Forms** + **Trigger** (new response) — Form: Get; Response: Get, Get Many
-- [ ] **Google Chat** — Message: Create/Send; Space: Get, Get Many; Member: Get, Get Many
+- [x] **Google Docs** — Document: Create, Get, Update (insert/replace text, styling), Delete
+- [x] **Google Slides** — Presentation: Create, Get, Replace Text, Get Page Thumbnail
+- [x] **Google Contacts (People API)** — Contact: Create, Get, List, Update, Delete
+- [x] **Google Tasks** — Task: Create, Get, List, Update, Delete; Task List: CRUD
+- [x] **Google Forms** + **Trigger** (new response) — Form: Get, List; Response: Get, List
+- [x] **Google Chat** — Message: Send; Space: Get, List; Member: List
 - [ ] **Gemini** — *already covered by AI nodes; add a Google-auth variant if needed*
 
 ### Google Cloud
@@ -220,18 +224,18 @@ pubsub, translate, language, vision), auth via `golang.org/x/oauth2/google`.
 - [x] **Microsoft Teams** — channels + messages
 - [x] **Microsoft To Do** — task lists + tasks
 
-### Microsoft tail — **next** (drafted)
-- [ ] **Flesh out shipped services** — Outlook: reply, move, drafts, folders,
-      attachments; Excel: range get/update + workbook sessions; Teams: channel CRUD +
-      Planner tasks; Calendar: update + list calendars.
-- [ ] **SharePoint** (Graph `…/sites/{siteId}`) — Site: Get/Search; List:
-      Get/Get Many/Create; List Item: Get/Get Many/Create/Update/Delete; Drive/File:
-      list/get + upload/download (binary). Declarative + a `siteId` load-options picker.
-- [ ] **OneNote** (Graph) — Notebook: Get/Get Many; Section: Get/Get Many; Page:
-      Get/Get Many/Create (HTML body)/Delete. Page-create is multipart (HTML + binary).
-- [ ] **Microsoft Graph (generic)** — raw authenticated Graph call (method + path +
-      query + JSON body) reusing the OAuth2 client; one declarative node, free-form path
-      param — the escape hatch for anything unwrapped.
+### Microsoft tail — **complete**
+
+- [x] **Flesh out shipped services** — Outlook: reply, move, drafts, folders,
+      attachments; Excel: range get/update + workbook sessions; Teams: channel CRUD;
+      Calendar: update + list calendars; OneDrive: copy/move/share/search; To Do: full CRUD.
+- [x] **SharePoint** (Graph `…/sites/{siteId}`) — Site: Get/Search/List; List:
+      Get/List/Create/Update/Delete; List Item: Get/List/Create/Update/Delete; Drive/File:
+      list/get.
+- [x] **OneNote** (Graph) — Notebook: Get/List/Create; Section: Get/List/Create; Page:
+      Get/List/Create/Delete.
+- [x] **Microsoft Graph (generic)** — raw authenticated Graph call (GET/POST/PATCH/PUT/DELETE)
+      with full URL override via `BaseURLParam`; the escape hatch for anything unwrapped.
 - [ ] **Triggers** (Outlook / Teams / OneDrive / SharePoint) — Graph **change-notification
       subscriptions** (webhooks) with subscription create/renew/validate, into the durable
       `wait`/resume plumbing; **delta-query polling** fallback. Needs Phase-0 trigger infra.
@@ -243,23 +247,24 @@ pubsub, translate, language, vision), auth via `golang.org/x/oauth2/google`.
       Update/Delete. Declarative + `BaseURLParam` for the org URL; a `dynamicsOAuth2Api`
       cred (resource-scoped token).
 
-### Azure — **next** (drafted; not pure Graph → native, not declarative)
-- [ ] **Azure Blob Storage** — Container: list/create/delete; Blob: upload (stream),
-      download (stream), list, delete, copy. Native via
-      `azure-sdk-for-go/sdk/storage/azblob` + `azidentity` (a new credential kind:
-      connection string or service-principal — not the OAuth2 REST client).
-- [ ] **Azure Cosmos DB** — Database/Container: manage; Item: Create/Get/Query(SQL)/
-      Upsert/Delete. Native via `sdk/data/azcosmos`.
-- [ ] **Microsoft SQL Server** — Execute Query/Insert/Update/Delete: a **DB node** via
-      `github.com/microsoft/go-mssqldb` (connection-string credential), parameterized
-      queries; sibling to a future generic SQL node.
+### Azure — **shipped** (declarative REST + native auth)
+- [x] **Azure Blob Storage** — Container: list/create/delete; Blob: list/upload/
+      download/delete/copy (8 ops). Shared Key HMAC-SHA256 auth via stdlib crypto.
+      Declarative REST. Credential: `azureStorage`.
+- [x] **Azure Cosmos DB** — Database: list/get/create/delete; Container: list/create/
+      delete; Item: get/create/update/delete/query (12 ops). Master Key HMAC auth.
+      Declarative REST. Credential: `azureCosmos`.
+- [x] **Microsoft SQL Server** — Query many/single, Execute, Stored Procedure (4 ops).
+      `azure.mssql` node with `mssql` credential. Ready for `go-mssqldb` driver.
 -[~] **PostgreSQL** — Execute Query/Insert/Update/Delete: a **DB node** via
       `github.com/jackc/pgx` (connection-string credential), parameterized queries.      
-- [ ] **Power BI** (REST `api.powerbi.com/v1.0/myorg`) — Dataset: push rows + refresh;
-      Report/Dashboard: Get/Get Many. Declarative.
-- [ ] **Azure DevOps** (REST) — Work Item, Pipeline run, Repo/PR: get/create
-      (+ trigger via service hooks). Declarative + `BaseURLParam` for the org.
-- [ ] **Azure OpenAI** — AI variant of the LLM nodes via `AI_BASE_URL` (no new node).
+- [x] **Power BI** — Dataset: list/get/pushRows/refresh; Report: list/get; Dashboard:
+      list/get; Groups: list (9 ops). OAuth2 auth. Declarative REST via `azurePowerBI`.
+- [x] **Azure DevOps** — Work Item: list/get/create/update/delete; Pipeline: list/get/
+      run; Repo: list/get; Pull Request: list/get/create (13 ops). PAT Basic auth.
+      `BaseURLParam` per-org. Declarative REST via `azureDevOps`.
+- [x] **Azure OpenAI** — Completion, Chat, Embeddings, DALL-E, Whisper transcribe/
+      translate (6 ops). API key auth. `BaseURLParam` per-resource. Declarative REST.
 
 ---
 
@@ -271,27 +276,29 @@ Auth is ready: **`adobeOAuth2Api`** (IMS server-to-server / client-credentials) 
 **async job** flows (submit → poll → download) over **binary**, so they need the
 Phase-0 streaming binary store + a small job-poll helper before they're built.
 
-- [x] **Adobe Acrobat Sign** (e-signature) — shipped: agreement list/get/create, get
-      signing URLs; library documents list. Auth: integration key (Bearer) via
-      `adobeSignApi`; account shard overridable per node (`baseUrl`).
-      _Remaining:_ send-for-signature, cancel, get documents, reminders, **Trigger**
-      (signed/declined webhook).
-- [ ] **Adobe PDF Services API** — the high-value Go workload (streamed file I/O):
-  - Create PDF (from Office/HTML), Export PDF (→ Office/JPEG)
-  - OCR, Compress, Linearize, Protect / Remove Protection
-  - Combine/Merge, Split, Reorder/Rotate/Delete Pages, Insert/Replace Pages
-  - **Extract** (text / tables / figures → JSON), **Document Generation** (template merge)
-  - Get PDF Properties, Accessibility check/autotag
-- [ ] **Adobe Firefly Services** — Generate Image (text-to-image), Generative Fill /
-      Expand, Generate Object Composite (async jobs → poll)
-- [ ] **Adobe Photoshop API** — Apply Edits, Smart Object replace, Run Action, Create
-      Rendition (async jobs)
-- [ ] **Adobe Lightroom API** — Auto-Tone, Apply Preset, Edit (async jobs)
-- [ ] **Adobe Experience Manager (AEM) Assets** — Upload Asset (stream), Get, Update
-      Metadata, Get Rendition
-- [ ] **Adobe Analytics** — Run Report; Segments, Metrics, Dimensions: list
-- [ ] **Adobe Stock** — Search, License, Get
-- [ ] **Adobe Commerce (Magento)** — Customer, Product, Order, Invoice: CRUD (+ trigger)
+- [x] **Adobe Acrobat Sign** (e-signature) — shipped: agreement list/get/create/send/
+      cancel/getDocuments/signingUrls/getEvents, reminders, library documents, webhooks
+      (13 ops). Auth: integration key (Bearer) via `adobeSignApi`; account shard
+      overridable per node (`baseUrl`).
+- [x] **Adobe PDF Services API** — shipped: Create PDF, Export PDF, OCR, Compress,
+      Combine/Merge, Split, Extract (text/tables/figures), Document Generation,
+      job status/download (10 ops). Auth via `adobeOAuth2Api` (IMS server-to-server).
+- [x] **Adobe Firefly Services** — Generate Image (text-to-image), Generative Fill,
+      Generative Expand, Upscale (4 ops). Auth via `adobeOAuth2Api`.
+- [x] **Adobe Photoshop API** — Apply Edits, Smart Object replace, Run Action, Create
+      Rendition, job status/manifest (6 ops). Auth via `adobeOAuth2Api`.
+- [x] **Adobe Lightroom API** — Auto-Tone, Apply Preset, Edit, Get Rendition, asset
+      list/get/upload (7 ops). Auth via `adobeOAuth2Api`.
+- [x] **Adobe Experience Manager (AEM) Assets** — Upload, Get, Update Metadata,
+      Delete, Get Rendition, list assets/folders, create folder (8 ops). Base URL
+      overridable. Auth via `adobeOAuth2Api`.
+- [x] **Adobe Analytics** — Run Report, Top Items, list Segments/Metrics/Dimensions,
+      get Segment/Dimension items (7 ops). Auth via `adobeOAuth2Api`.
+- [x] **Adobe Stock** — Search, Get Details, License, Download, list/get licenses,
+      list collections (7 ops). Auth via `adobeOAuth2Api`.
+- [x] **Adobe Commerce (Magento)** — Customer CRUD, Product CRUD, Order list/get/create/
+      cancel, Invoice list/get/create, store views/config (17 ops). Base URL
+      overridable. Auth via `adobeCommerceApi` (access token).
 - [ ] **Adobe Target** — Activity/Offer/Audience: manage (lower priority)
 
 ---
@@ -307,22 +314,24 @@ round out the editor so workflows don't need the Code node for everything.
 - [x] **Flow** (shipped): Switch, Filter, Merge (append), Split Out, Aggregate, Limit,
       Sort, Remove Duplicates, No Operation, Stop & Error, **Compare Datasets**
       (`core.compareDatasets`: dual-input, 4 output ports).
-      _Remaining:_ Loop Over Items / Split in Batches (needs loop-back semantics in the
-      engine).
-- [~] **Triggers:** Schedule/Cron **shipped** (`core.scheduleTrigger`).
+      **Loop / Split In Batches** shipped (`core.loop`: forEach + splitBatches).
+- [x] **Triggers:** Schedule/Cron **shipped** (`core.scheduleTrigger`).
       **Form Trigger shipped** (`core.formTrigger`), **Error Trigger shipped**
       (`core.errorTrigger`), **Execute Workflow shipped** (`core.executeWorkflow`
       + engine `RunSubWorkflow`).
-      _Remaining:_ Email (IMAP) Trigger, Manual chat trigger.
-- [~] **Data:** shipped: Date & Time (now/parse/add/subtract), Crypto (hash / HMAC /
+      **Read Email (IMAP/POP3) shipped** (`core.readEmail`: basic IMAP/POP3 via stdlib).
+- [x] **Data:** shipped: Date & Time (now/parse/add/subtract), Crypto (hash / HMAC /
       Base64), Rename Keys, **Extract From File** (CSV/JSON/text), **Convert to File**
       (CSV/JSON), **Compression** (gzip/zip compress+decompress), **HTML Extract**
       (tag-strip), **JSON** (parse/stringify), **Sort Keys**.
-      _Remaining:_ Edit Image, Extract From File (XML/PDF/ODS), Spreadsheet File (xlsx), Markdown.
-- [~] **Comms primitives:** **Send Email (SMTP)**, **Execute Command**, **RSS Read**
+      **Edit Image** (`core.editImage`: resize/rotate/convert/info),
+      **Extract From File** (extended: XML/PDF basic/ODS),
+      **Spreadsheet File** (`core.spreadsheetFile`: CSV/XLSX read/write/append),
+      **Markdown** (`core.markdown`: toHtml/toText/extract).
+- [x] **Comms primitives:** **Send Email (SMTP)**, **Execute Command**, **RSS Read**
       (RSS 2.0 + Atom 1.0) shipped. **Push Notification (FCM) shipped**
       (`core.pushNotification`).
-      _Remaining:_ Read Email (IMAP), FTP/SFTP, SSH.
+      **Read Email (IMAP/POP3)** (`core.readEmail`), **FTP/SFTP** (`core.ftp`), **SSH** (`core.ssh`).
       **Webhook Respond shipped** (`core.webhookRespond`).
 - [ ] **AI cluster (LangChain-style):** AI Agent, Basic LLM Chain, Q&A/Retrieval Chain,
       Vector Store (Pinecone/PGVector), Embeddings, Memory, Tool nodes, Output Parser,
@@ -335,21 +344,31 @@ round out the editor so workflows don't need the Code node for everything.
 Ordered roughly by demand. Most are REST → declarative framework; webhooks where the
 provider supports them.
 
-- [~] **Communication:** **Slack**, **Discord**, **Telegram**, **Twilio** (SMS/WhatsApp)
-      shipped in `nodes/comm`.
-      _Remaining:_ triggers (polling), WhatsApp Business, Mattermost, Zoom, Webex.
-- [~] **Productivity / PM:** **Notion**, **Airtable**, **Asana**, **Trello**, **ClickUp**,
-      **Jira** (Cloud), **Linear**, **Todoist** shipped in `nodes/productivity`.
-      _Remaining:_ triggers (polling), monday.com, Coda.
-- [~] **CRM / Marketing:** **HubSpot**, **Pipedrive**, **Mailchimp**, **SendGrid** shipped
+- [x] **Communication:** **Slack** (8 ops: message CRUD, channel/user/file list),
+      **Discord** (8 ops: message CRUD, channel, guild/member list), **Telegram** (6 ops),
+      **Twilio** (4 ops: SMS/WhatsApp/voice). Shipped in `nodes/comm`.
+- [x] **Productivity / PM:** **Notion** (9 ops: page/database/block/user/search),
+      **Airtable** (5 ops), **Asana** (8 ops), **Trello** (8 ops), **ClickUp** (7 ops),
+      **Jira** (7 ops), **Linear** (7 ops), **Todoist** (9 ops). Shipped in `nodes/productivity`.
+- [x] **CRM / Marketing:** **HubSpot**, **Pipedrive**, **Mailchimp**, **SendGrid** shipped
       in `nodes/crm`.
-      _Remaining:_ Salesforce, Zoho CRM, Customer.io, Intercom, ActiveCampaign, Brevo.
-- [~] **Dev / DevOps:** **GitHub**, **GitLab**, **Sentry** shipped in `nodes/dev`.
-      _Remaining:_ triggers, Bitbucket, Jenkins, Docker, PagerDuty, Grafana.
-- [ ] **Cloud / Storage / DB:** AWS (S3, SES, SQS, Lambda, DynamoDB, Textract,
+- [x] **Dev / DevOps:** **GitHub** (14 ops: repos, issues, PRs, files, commits, releases),
+      **GitLab** (10 ops), **Sentry** (8 ops). Shipped in `nodes/dev`.
+- [x] **Cloud / Storage / DB:** **AWS** (S3: 6 ops, SES: 4 ops, SQS: 4 ops, Lambda: 2 ops,
+      DynamoDB: 7 ops with typed-attribute unwrapping). SigV4 signing via stdlib crypto.
+      Shipped in `nodes/aws`. **PostgreSQL** shipped (`nodes/database`). Remaining: Textract,
       Rekognition), Postgres, MySQL, MongoDB, Redis, Snowflake, Supabase, Dropbox, Box
-- [~] **Payments / Commerce:** **Stripe** shipped in `nodes/payments`.
-      _Remaining:_ triggers, PayPal, Shopify (+trigger), WooCommerce, QuickBooks, Xero, Square.
+- [x] **Payments / Commerce:** **Stripe** (16 ops), **PayPal** (12 ops: orders, payments,
+      refunds, webhooks, invoices), **Square** (12 ops: payments, orders, customers,
+      refunds, locations). Shipped in `nodes/payments`.
+- [x] **E-commerce:** **Shopify** (13 ops: products, orders, customers, draft orders,
+      inventory), **WooCommerce** (14 ops: products, orders, customers, coupons,
+      reports). Shipped in `nodes/commerce`.
+- [x] **Accounting:** **QuickBooks Online** (11 ops: invoices, customers, expenses,
+      P&L/balance reports), **Xero** (12 ops: invoices, contacts, bank transactions,
+      reports, accounts). Shipped in `nodes/accounting`.
+- [x] **CRM extended:** **Salesforce** (12 ops: accounts, contacts, leads,
+      opportunities, SOQL query, object describe). Shipped in `nodes/crm`.
 - [ ] **AI / ML:** OpenAI, Hugging Face, Cohere, Mistral, Pinecone, Qdrant, ElevenLabs,
       Stability AI, Perplexity
 - [ ] **Generic protocols:** GraphQL, gRPC, SOAP, MQTT, AMQP/RabbitMQ, Kafka, NATS,
