@@ -21,9 +21,13 @@ import (
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/crypto"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/engine"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/llm"
+	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/accounting"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/adobe"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/ai"
+	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/aws"
+	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/azure"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/comm"
+	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/commerce"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/core"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/crm"
 	"github.com/CrossCraftAI/crosscraft-brain/server/internal/nodes/database"
@@ -98,6 +102,10 @@ func main() {
 		Register(crm.Nodes()...).
 		Register(payments.Nodes()...).
 		Register(dev.Nodes()...).
+		Register(aws.Nodes()...).
+		Register(azure.Nodes()...).
+		Register(commerce.Nodes()...).
+		Register(accounting.Nodes()...).
 		Register(database.PostgresNode())
 	st := store.New(pool, cipher)
 	eng := engine.New(reg, st)

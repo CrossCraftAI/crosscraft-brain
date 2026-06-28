@@ -144,12 +144,12 @@ func TestGmailSendMessage(t *testing.T) {
 	def := GmailNode(srv.URL)
 	called := false
 	ctx := gmailOauthCtx(map[string]any{
-		"operation":    "message:send",
-		"to":           "bob@example.com",
-		"subject":      "Hello",
-		"body":         "Test body",
-		"contentType":  "text/plain",
-		"credential":   "c1",
+		"operation":   "message:send",
+		"to":          "bob@example.com",
+		"subject":     "Hello",
+		"body":        "Test body",
+		"contentType": "text/plain",
+		"credential":  "c1",
 	}, srv.Client(), &called)
 
 	res, err := def.Execute(ctx)
@@ -272,11 +272,11 @@ func TestGmailModifyMessage(t *testing.T) {
 	def := GmailNode(srv.URL)
 	called := false
 	ctx := gmailOauthCtx(map[string]any{
-		"operation":    "message:modify",
-		"messageId":    "msg1",
-		"addLabelIds":  "IMPORTANT,STARRED",
+		"operation":      "message:modify",
+		"messageId":      "msg1",
+		"addLabelIds":    "IMPORTANT,STARRED",
 		"removeLabelIds": "UNREAD",
-		"credential":   "c1",
+		"credential":     "c1",
 	}, srv.Client(), &called)
 
 	res, err := def.Execute(ctx)
@@ -421,10 +421,10 @@ func TestGmailGetThread(t *testing.T) {
 	if thread["id"] != "t1" {
 		t.Fatalf("unexpected thread: %+v", thread)
 	}
-		msgs, _ := thread["messages"].([]map[string]any)
-		if len(msgs) != 2 {
-			t.Fatalf("expected 2 messages in thread, got %d", len(msgs))
-		}
+	msgs, _ := thread["messages"].([]map[string]any)
+	if len(msgs) != 2 {
+		t.Fatalf("expected 2 messages in thread, got %d", len(msgs))
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -484,10 +484,10 @@ func TestGmailCreateLabel(t *testing.T) {
 	def := GmailNode(srv.URL)
 	called := false
 	ctx := gmailOauthCtx(map[string]any{
-		"operation":    "label:create",
-		"labelName":    "MyLabel",
+		"operation":           "label:create",
+		"labelName":           "MyLabel",
 		"labelListVisibility": "labelShow",
-		"credential":   "c1",
+		"credential":          "c1",
 	}, srv.Client(), &called)
 
 	res, err := def.Execute(ctx)
