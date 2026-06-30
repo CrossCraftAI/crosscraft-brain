@@ -39,6 +39,7 @@
   --group-flow: #c0883e; /* amber */
   --group-integration: #c15f3c; /* terracotta */
   --group-ai: #d97757; /* orange */
+  --group-storage: #8b5cf6; /* violet */
 
   /* radii */
   --radius: 10px;
@@ -74,6 +75,7 @@
   --color-group-flow: var(--group-flow);
   --color-group-integration: var(--group-integration);
   --color-group-ai: var(--group-ai);
+  --color-group-storage: var(--group-storage);
 
   /* ── shadcn/ui semantic aliases (so ui/* components read like upstream) ── */
   --color-background: var(--bg);

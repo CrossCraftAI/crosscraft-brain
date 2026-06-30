@@ -1,8 +1,10 @@
-// Package adobe provides Adobe integration nodes. Adobe ships no official Go SDK,
-// so these are plain REST on the declarative framework. Acrobat Sign authenticates
-// with an integration key (Bearer header); its account shard/base URL is
-// overridable per node. PDF Services / Firefly (async jobs + binary) are a
-// follow-up that will use the Adobe IMS server-to-server credential (adobeOAuth2Api).
+// Package adobe provides Adobe integration nodes: Acrobat Sign, PDF Services,
+// Firefly, Photoshop, Lightroom, AEM Assets, Analytics, Stock, and Commerce.
+// Adobe ships no official Go SDKs, so these are declarative REST nodes.
+// Acrobat Sign uses a Bearer token (Integration Key). Most Creative Cloud APIs
+// (PDF Services, Firefly, Photoshop, Lightroom, AEM, Analytics, Stock) use
+// Adobe IMS server-to-server OAuth2 via adobeOAuth2Api. Commerce (Magento)
+// uses an access token via adobeCommerceApi.
 package adobe
 
 import (
@@ -16,33 +18,37 @@ func sp(name, label string, required bool) schema.ParamSchema {
 func jp(name, label string) schema.ParamSchema {
 	return schema.ParamSchema{Name: name, Label: label, Type: "json"}
 }
+func ip(name, label string, def int) schema.ParamSchema {
+	return schema.ParamSchema{Name: name, Label: label, Type: "number", Default: float64(def)}
+}
+
+func signNode(base, cred string, ops []rest.Op) rest.Node {
+	return rest.Node{
+		BaseURL: base, CredType: cred,
+		Auth:   rest.Auth{Kind: "header", Header: "Authorization", Prefix: "Bearer ", ValueField: "accessToken"},
+		Ops:    ops,
+	}
+}
+
+func oauth2Node(base, typ, label, icon, desc string, ops []rest.Op) rest.Node {
+	return rest.Node{
+		Type: typ, Label: label, Group: "integration", Icon: icon, Description: desc,
+		BaseURL: base, CredType: "adobeOAuth2Api",
+		Auth: rest.Auth{Kind: "oauth2"}, Ops: ops,
+	}
+}
 
 // Nodes returns the Adobe node pack.
 func Nodes() []schema.NodeDefinition {
 	return []schema.NodeDefinition{
 		AcrobatSign("https://api.na1.adobesign.com/api/rest/v6").Build(),
-	}
-}
-
-// AcrobatSign — Adobe Acrobat Sign v6 (e-signature). Auth: integration key as a
-// Bearer header (adobeSignApi). The base URL defaults to the na1 shard and is
-// overridable via the per-node "baseUrl" param for other account regions.
-func AcrobatSign(base string) rest.Node {
-	agID := sp("agreementId", "Agreement ID", true)
-	body := jp("body", "Body (JSON)")
-	return rest.Node{
-		Type: "adobe.acrobatSign", Label: "Adobe Acrobat Sign", Group: "integration", Icon: "FileSignature",
-		Description:  "Send and track e-signature agreements.",
-		BaseURL:      base,
-		BaseURLParam: "baseUrl",
-		CredType:     "adobeSignApi",
-		Auth:         rest.Auth{Kind: "header", Header: "Authorization", Prefix: "Bearer ", ValueField: "accessToken"},
-		Ops: []rest.Op{
-			{Resource: "agreement", Name: "list", Label: "List Agreements", Method: "GET", Path: "/agreements", ItemsPath: "userAgreementList"},
-			{Resource: "agreement", Name: "get", Label: "Get Agreement", Method: "GET", Path: "/agreements/{agreementId}", Params: []schema.ParamSchema{agID}},
-			{Resource: "agreement", Name: "create", Label: "Create Agreement", Method: "POST", Path: "/agreements", BodyParam: "body", Params: []schema.ParamSchema{body}},
-			{Resource: "agreement", Name: "signingUrls", Label: "Get Signing URLs", Method: "GET", Path: "/agreements/{agreementId}/signingUrls", Params: []schema.ParamSchema{agID}},
-			{Resource: "libraryDocument", Name: "list", Label: "List Library Documents", Method: "GET", Path: "/libraryDocuments", ItemsPath: "libraryDocumentList"},
-		},
+		PDFServices("https://pdf-services.adobe.io").Build(),
+		Firefly("https://firefly-api.adobe.io").Build(),
+		Photoshop("https://image.adobe.io").Build(),
+		Lightroom("https://lr.adobe.io").Build(),
+		AEMAssets("").Build(),
+		Analytics("https://analytics.adobe.io").Build(),
+		Stock("https://stock.adobe.io").Build(),
+		Commerce("").Build(),
 	}
 }

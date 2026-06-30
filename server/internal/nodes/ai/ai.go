@@ -1,9 +1,11 @@
-// Package ai provides LLM action nodes usable inside any workflow. Native Go port
-// of packages/nodes-ai/src/index.ts; calls go through internal/llm.
+// Package ai provides LLM action nodes and AI/ML integration nodes for any workflow.
+// Native Go port of packages/nodes-ai/src/index.ts; LLM calls go through internal/llm.
+// Third-party AI services (OpenAI, Hugging Face, Cohere, etc.) use direct HTTP calls.
 package ai
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -19,7 +21,7 @@ func itemsOrEmpty(in []schema.Item) []schema.Item {
 	return []schema.Item{{JSON: map[string]any{}}}
 }
 
-// Nodes returns the AI node definitions, bound to the given LLM client.
+// Nodes returns the full AI node pack — LLM actions and third-party AI integrations.
 func Nodes(c *llm.Client) []schema.NodeDefinition {
 	summarize := schema.NodeDefinition{
 		Type:        "ai.summarize",
@@ -127,10 +129,123 @@ func Nodes(c *llm.Client) []schema.NodeDefinition {
 		},
 	}
 
-	return []schema.NodeDefinition{summarize, classify, extract}
+	return []schema.NodeDefinition{
+		summarize, classify, extract,
+		// Third-party AI/ML integrations
+		HuggingFace(),
+		Cohere(),
+		Mistral(),
+		Pinecone(),
+		Qdrant(),
+		ElevenLabs(),
+		StabilityAI(),
+		Perplexity(),
+		OpenAI(),
+	}
 }
 
-// ---- helpers ---------------------------------------------------------------
+// ---- shared helpers used across all ai/*.go files -----------------------------
+
+func str(params map[string]any, name, def string) string {
+	if v, ok := params[name]; ok && v != nil {
+		if s, ok := v.(string); ok && s != "" {
+			return s
+		}
+		return fmt.Sprintf("%v", v)
+	}
+	return def
+}
+
+func num(params map[string]any, name string, def float64) float64 {
+	if v, ok := params[name]; ok {
+		switch t := v.(type) {
+		case float64:
+			return t
+		case int:
+			return float64(t)
+		case int64:
+			return float64(t)
+		case json.Number:
+			if f, err := t.Float64(); err == nil {
+				return f
+			}
+		}
+	}
+	return def
+}
+
+func getCredStr(ctx *schema.ExecContext, paramName, field, def string) string {
+	cred, err := ctx.Credential(paramName)
+	if err != nil || cred == nil {
+		return def
+	}
+	if v, ok := cred[field].(string); ok && v != "" {
+		return v
+	}
+	return def
+}
+
+func rawParam(params map[string]any, name string) any {
+	if v, ok := params[name]; ok && v != nil {
+		return v
+	}
+	return nil
+}
+
+func item(v any) schema.Item {
+	if m, ok := v.(map[string]any); ok {
+		return schema.Item{JSON: m}
+	}
+	return schema.Item{JSON: map[string]any{"value": v}}
+}
+
+func trunc(s string, n int) string {
+	if len(s) > n {
+		return s[:n] + "…"
+	}
+	return s
+}
+
+func toItems(result map[string]any, path string) []schema.Item {
+	node := getPath(result, path)
+	if arr, ok := node.([]any); ok {
+		out := make([]schema.Item, 0, len(arr))
+		for _, e := range arr {
+			if m, ok := e.(map[string]any); ok {
+				out = append(out, schema.Item{JSON: m})
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	// Fallback: wrap the whole result
+	return []schema.Item{schema.Item{JSON: result}}
+}
+
+func getPath(root any, path string) any {
+	if path == "" {
+		return root
+	}
+	cur := root
+	for _, part := range strings.Split(path, ".") {
+		m, ok := cur.(map[string]any)
+		if !ok {
+			return cur
+		}
+		cur = m[part]
+		if cur == nil {
+			return root
+		}
+	}
+	return cur
+}
+
+func bytesToB64(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+// ---- helper functions (used by existing LLM nodes) ----------------------------
 
 func asString(v any, def string) string {
 	if v == nil {
