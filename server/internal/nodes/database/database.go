@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -10,6 +11,33 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// asObjectValue converts an arbitrary param value to map[string]any.
+// Handles string-JSON and map types. Used by all database nodes to parse
+// query/document/pipeline params.
+func asObjectValue(v any) map[string]any {
+	switch t := v.(type) {
+	case map[string]any:
+		return t
+	case string:
+		var m map[string]any
+		if json.Unmarshal([]byte(t), &m) == nil {
+			return m
+		}
+	}
+	return nil
+}
+
+// asString safely extracts a string from a param value, returning def for nil.
+func asString(v any, def string) string {
+	if v == nil {
+		return def
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return fmt.Sprintf("%v", v)
+}
+
 var (
 	postgresPoolMu    sync.Mutex
 	postgresPoolCache = make(map[string]*pgxpool.Pool)
@@ -17,6 +45,18 @@ var (
 		return pgxpool.New(ctx, dsn)
 	}
 )
+
+// Nodes returns all database integration nodes.
+func Nodes() []schema.NodeDefinition {
+	return []schema.NodeDefinition{
+		PostgresNode(),
+		MongoNode(),
+		MySQLNode(),
+		RedisNode(),
+		SnowflakeNode(),
+		SupabaseNode(),
+	}
+}
 
 // PostgresNode returns the definition for the PostgreSQL node.
 func PostgresNode() schema.NodeDefinition {

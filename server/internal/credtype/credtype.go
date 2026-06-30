@@ -276,5 +276,146 @@ func Default() *Registry {
 			{Name: "port", Label: "Port", Type: "string", Placeholder: "5432"},
 			{Name: "dbname", Label: "Database Name", Type: "string"},
 		}},
+		// ── Zoho CRM ──────────────────────────────────────────────────────────
+		Type{Name: "zohoCrmApi", DisplayName: "Zoho CRM (OAuth2)", Fields: clientFields,
+			OAuth2: &OAuth2{
+				AuthURL:  "https://accounts.zoho.com/oauth/v2/auth",
+				TokenURL: "https://accounts.zoho.com/oauth/v2/token",
+				AuthParams: map[string]string{
+					"access_type": "offline",
+					"prompt":      "consent",
+				},
+				Scopes: []string{"ZohoCRM.modules.ALL"},
+			}},
+		// ── Intercom ──────────────────────────────────────────────────────────
+		Type{Name: "intercomApi", DisplayName: "Intercom (Access Token)", Fields: []Field{
+			{Name: "accessToken", Label: "Access Token", Type: "password", Required: true},
+		}},
+		// ── Customer.io ───────────────────────────────────────────────────────
+		Type{Name: "customerioApi", DisplayName: "Customer.io (App API Key)", Fields: []Field{
+			{Name: "accessToken", Label: "App API Key (Bearer)", Type: "password", Required: true},
+		}},
+		// ── ActiveCampaign ────────────────────────────────────────────────────
+		Type{Name: "activecampaignApi", DisplayName: "ActiveCampaign (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+			{Name: "account", Label: "Account Name (subdomain)", Type: "string", Required: true, Placeholder: "youraccount"},
+		}},
+		// ── Brevo ─────────────────────────────────────────────────────────────
+		Type{Name: "brevoApi", DisplayName: "Brevo (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+		}},
+		// ── Generic Protocols ─────────────────────────────────────────────────
+		Type{Name: "graphqlApi", DisplayName: "GraphQL (Bearer Token / API Key)", Fields: []Field{
+			{Name: "accessToken", Label: "Bearer Token", Type: "password"},
+			{Name: "apiKey", Label: "API Key", Type: "password"},
+		}},
+		Type{Name: "grpcApi", DisplayName: "gRPC (TLS / Token)", Fields: []Field{
+			{Name: "accessToken", Label: "Bearer Token", Type: "password"},
+			{Name: "certFile", Label: "Client Certificate File", Type: "string"},
+			{Name: "keyFile", Label: "Client Key File", Type: "string"},
+		}},
+		Type{Name: "soapApi", DisplayName: "SOAP (Basic Auth / Bearer Token)", Fields: []Field{
+			{Name: "username", Label: "Username", Type: "string"},
+			{Name: "password", Label: "Password", Type: "password"},
+			{Name: "accessToken", Label: "Bearer Token", Type: "password"},
+		}},
+		Type{Name: "mqttApi", DisplayName: "MQTT (Username / Password / TLS)", Fields: []Field{
+			{Name: "username", Label: "Username", Type: "string"},
+			{Name: "password", Label: "Password", Type: "password"},
+			{Name: "certFile", Label: "Client Certificate File", Type: "string"},
+			{Name: "keyFile", Label: "Client Key File", Type: "string"},
+			{Name: "caFile", Label: "CA Certificate File", Type: "string"},
+		}},
+		Type{Name: "amqpApi", DisplayName: "AMQP / RabbitMQ (Credentials)", Fields: []Field{
+			{Name: "username", Label: "Username", Type: "string", Required: true, Placeholder: "guest"},
+			{Name: "password", Label: "Password", Type: "password", Required: true, Placeholder: "guest"},
+			{Name: "vhost", Label: "Virtual Host", Type: "string", Placeholder: "/"},
+		}},
+		Type{Name: "kafkaApi", DisplayName: "Kafka (SASL / TLS)", Fields: []Field{
+			{Name: "username", Label: "SASL Username", Type: "string"},
+			{Name: "password", Label: "SASL Password", Type: "password"},
+			{Name: "certFile", Label: "Client Certificate File", Type: "string"},
+			{Name: "keyFile", Label: "Client Key File", Type: "string"},
+		}},
+		Type{Name: "natsApi", DisplayName: "NATS (JWT / NKey / Basic Auth)", Fields: []Field{
+			{Name: "jwt", Label: "JWT Token", Type: "password"},
+			{Name: "nkeySeed", Label: "NKey Seed", Type: "password"},
+			{Name: "username", Label: "Username", Type: "string"},
+			{Name: "password", Label: "Password", Type: "password"},
+		}},
+		Type{Name: "websocketApi", DisplayName: "WebSocket (Bearer Token / API Key)", Fields: []Field{
+			{Name: "accessToken", Label: "Bearer Token", Type: "password"},
+			{Name: "apiKey", Label: "API Key", Type: "password"},
+		}},
+		// ── AI / ML Platforms ───────────────────────────────────────────────
+		Type{Name: "huggingfaceApi", DisplayName: "Hugging Face (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key (hf_...)", Type: "password", Required: true},
+		}},
+		Type{Name: "cohereApi", DisplayName: "Cohere (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+		}},
+		Type{Name: "mistralApi", DisplayName: "Mistral AI (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+		}},
+		Type{Name: "pineconeApi", DisplayName: "Pinecone (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+		}},
+		Type{Name: "qdrantApi", DisplayName: "Qdrant (API Key + URL)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key", Type: "password", Required: true},
+			{Name: "url", Label: "Instance URL", Type: "string", Placeholder: "https://my-cluster.qdrant.io:6333"},
+		}},
+		Type{Name: "elevenlabsApi", DisplayName: "ElevenLabs (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key (xi_...)", Type: "password", Required: true},
+		}},
+		Type{Name: "stabilityApi", DisplayName: "Stability AI (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key (sk-...)", Type: "password", Required: true},
+		}},
+		Type{Name: "perplexityApi", DisplayName: "Perplexity (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key (pplx-...)", Type: "password", Required: true},
+		}},
+		Type{Name: "openaiApi", DisplayName: "OpenAI (API Key)", Fields: []Field{
+			{Name: "apiKey", Label: "API Key (sk-...)", Type: "password", Required: true},
+		}},
+		// ── Database & Storage ─────────────────────────────────────────────────
+		Type{Name: "mongodbApi", DisplayName: "MongoDB", Fields: []Field{
+			{Name: "connectionString", Label: "Connection String", Type: "string", Placeholder: "mongodb://user:pass@host:27017/dbname"},
+			{Name: "host", Label: "Host", Type: "string", Placeholder: "localhost"},
+			{Name: "port", Label: "Port", Type: "string", Placeholder: "27017"},
+			{Name: "user", Label: "Username", Type: "string"},
+			{Name: "password", Label: "Password", Type: "password"},
+			{Name: "database", Label: "Database Name", Type: "string"},
+		}},
+		Type{Name: "mysqlApi", DisplayName: "MySQL", Fields: []Field{
+			{Name: "dsn", Label: "Connection String (optional)", Type: "string", Placeholder: "user:pass@tcp(host:3306)/dbname"},
+			{Name: "host", Label: "Host", Type: "string", Placeholder: "localhost"},
+			{Name: "port", Label: "Port", Type: "string", Placeholder: "3306"},
+			{Name: "user", Label: "Username", Type: "string"},
+			{Name: "password", Label: "Password", Type: "password"},
+			{Name: "database", Label: "Database Name", Type: "string"},
+		}},
+		Type{Name: "redisApi", DisplayName: "Redis", Fields: []Field{
+			{Name: "host", Label: "Host", Type: "string", Required: true, Placeholder: "localhost"},
+			{Name: "port", Label: "Port", Type: "string", Placeholder: "6379"},
+			{Name: "password", Label: "Password", Type: "password"},
+			{Name: "db", Label: "Database Number", Type: "string", Placeholder: "0"},
+		}},
+		Type{Name: "snowflakeApi", DisplayName: "Snowflake", Fields: []Field{
+			{Name: "account", Label: "Account Identifier", Type: "string", Required: true, Placeholder: "myorg-abc123"},
+			{Name: "user", Label: "Username", Type: "string", Required: true},
+			{Name: "password", Label: "Password", Type: "password", Required: true},
+			{Name: "warehouse", Label: "Warehouse", Type: "string", Placeholder: "COMPUTE_WH"},
+			{Name: "database", Label: "Database Name", Type: "string"},
+			{Name: "schema", Label: "Schema", Type: "string", Placeholder: "PUBLIC"},
+		}},
+		Type{Name: "supabaseApi", DisplayName: "Supabase", Fields: []Field{
+			{Name: "url", Label: "Project URL", Type: "string", Required: true, Placeholder: "https://xxxxx.supabase.co"},
+			{Name: "accessToken", Label: "Service Role Key (or Anon Key)", Type: "password", Required: true},
+		}},
+		Type{Name: "dropboxApi", DisplayName: "Dropbox (Access Token)", Fields: []Field{
+			{Name: "accessToken", Label: "Access Token (sl....)", Type: "password", Required: true},
+		}},
+		Type{Name: "boxApi", DisplayName: "Box (Access Token)", Fields: []Field{
+			{Name: "accessToken", Label: "Access Token", Type: "password", Required: true},
+		}},
 	)
 }

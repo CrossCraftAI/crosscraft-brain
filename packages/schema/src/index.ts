@@ -47,7 +47,7 @@ export interface Workflow {
 // Node authoring contract (how a node/integration declares itself)
 // ---------------------------------------------------------------------------
 
-export type NodeGroup = 'trigger' | 'transform' | 'flow' | 'integration' | 'ai';
+export type NodeGroup = 'trigger' | 'transform' | 'flow' | 'integration' | 'ai' | 'storage';
 
 export interface Port {
   id: string; // "main", "true", "false", ...

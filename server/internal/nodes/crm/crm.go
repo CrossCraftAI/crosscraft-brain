@@ -1,5 +1,5 @@
 // Package crm provides CRM and marketing integration nodes: HubSpot, SendGrid,
-// Pipedrive (declarative REST) and Mailchimp (native, due to server-derived URL).
+// Pipedrive (declarative REST), Mailchimp (native), Salesforce, Zoho CRM, and Intercom.
 package crm
 
 import (
@@ -35,6 +35,8 @@ func Nodes() []schema.NodeDefinition {
 		Pipedrive().Build(),
 			Mailchimp(),
 		Salesforce("https://login.salesforce.com").Build(),
+		ZohoCRM().Build(),
+		Intercom().Build(),
 	}
 }
 

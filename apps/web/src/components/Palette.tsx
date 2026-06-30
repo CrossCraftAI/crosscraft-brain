@@ -15,6 +15,7 @@ const GROUPS: { key: string; label: string }[] = [
   { key: 'flow', label: 'Flow' },
   { key: 'integration', label: 'Integrations' },
   { key: 'ai', label: 'AI' },
+  { key: 'storage', label: 'Storage' },
 ];
 
 const FAV_KEY = 'cc.palette.favorites';
@@ -61,7 +62,7 @@ export function Palette({
   const favItems = filtered.filter((d) => favs.includes(d.type));
 
   return (
-    <div className="flex w-60 shrink-0 flex-col border-r border-border bg-panel/40">
+    <div className="flex w-60 shrink-0 flex-col overflow-hidden border-r border-border bg-panel/40">
       <div className="border-b border-border p-3">
         <Input
           value={q}
@@ -134,7 +135,7 @@ function Group({
                   onDragStart={(e) => e.dataTransfer.setData('application/cc-node', d.type)}
                   onClick={() => onAdd?.(d.type)}
                   className={cn(
-                    'group flex cursor-grab items-center gap-2.5 rounded-md border border-border bg-panel-2 px-2.5 py-2 text-[13px]',
+                    'group flex min-w-0 cursor-grab items-center gap-2.5 rounded-md border border-border bg-panel-2 px-2.5 py-2 text-[13px]',
                     'transition-colors hover:border-border-2 hover:bg-panel-3 active:cursor-grabbing',
                   )}
                 >

@@ -356,8 +356,16 @@ provider supports them.
       **GitLab** (10 ops), **Sentry** (8 ops). Shipped in `nodes/dev`.
 - [x] **Cloud / Storage / DB:** **AWS** (S3: 6 ops, SES: 4 ops, SQS: 4 ops, Lambda: 2 ops,
       DynamoDB: 7 ops with typed-attribute unwrapping). SigV4 signing via stdlib crypto.
-      Shipped in `nodes/aws`. **PostgreSQL** shipped (`nodes/database`). Remaining: Textract,
-      Rekognition), Postgres, MySQL, MongoDB, Redis, Snowflake, Supabase, Dropbox, Box
+      Shipped in `nodes/aws`. **PostgreSQL** shipped (`nodes/database`).
+      **MongoDB** (10 ops: find/findOne/insertOne/insertMany/updateOne/updateMany/
+      deleteOne/deleteMany/aggregate/trigger) shipped. **MySQL** (5 ops: query:many/
+      query:one/exec/storedProcedure:exec/trigger) shipped. **Redis** (16 ops: get/set/
+      delete/expire/incr/decr/hget/hset/hgetall/lpush/rpop/sadd/smembers/publish/
+      subscribe/trigger) shipped. **Snowflake** (4 ops: query:many/query:one/exec/
+      trigger) shipped. **Supabase** (6 ops: select/insert/update/delete/rpc/trigger)
+      shipped. **Dropbox** (8 ops: list/upload/download/delete/move/copy/share/trigger)
+      shipped. **Box** (8 ops: list/upload/download/delete/move/copy/share/trigger)
+      shipped. All in `nodes/database` and `nodes/storage`.
 - [x] **Payments / Commerce:** **Stripe** (16 ops), **PayPal** (12 ops: orders, payments,
       refunds, webhooks, invoices), **Square** (12 ops: payments, orders, customers,
       refunds, locations). Shipped in `nodes/payments`.
@@ -369,10 +377,10 @@ provider supports them.
       reports, accounts). Shipped in `nodes/accounting`.
 - [x] **CRM extended:** **Salesforce** (12 ops: accounts, contacts, leads,
       opportunities, SOQL query, object describe). Shipped in `nodes/crm`.
-- [ ] **AI / ML:** OpenAI, Hugging Face, Cohere, Mistral, Pinecone, Qdrant, ElevenLabs,
-      Stability AI, Perplexity
-- [ ] **Generic protocols:** GraphQL, gRPC, SOAP, MQTT, AMQP/RabbitMQ, Kafka, NATS,
-      WebSocket
+- [x] **AI / ML:** OpenAI, Hugging Face, Cohere, Mistral, Pinecone, Qdrant, ElevenLabs,
+      Stability AI, Perplexity — shipped in `nodes/ai`
+- [x] **Generic protocols:** GraphQL, gRPC, SOAP, MQTT, AMQP/RabbitMQ, Kafka, NATS,
+      WebSocket — shipped in `nodes/protocols`
 
 ---
 

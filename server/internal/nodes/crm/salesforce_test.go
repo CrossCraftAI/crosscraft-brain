@@ -24,8 +24,8 @@ func TestSalesforceNode(t *testing.T) {
 
 func TestCRMNodeCount(t *testing.T) {
 	nodes := Nodes()
-	if len(nodes) != 5 {
-		t.Fatalf("expected 5 CRM nodes, got %d", len(nodes))
+	if len(nodes) != 7 {
+		t.Fatalf("expected 7 CRM nodes, got %d", len(nodes))
 	}
 }
 

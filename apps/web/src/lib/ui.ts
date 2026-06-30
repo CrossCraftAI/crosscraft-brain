@@ -6,7 +6,7 @@ import type { BadgeProps } from '@/components/ui/badge';
  * name so a fork rebrands by overriding the var, never by editing a component.
  */
 
-export type NodeGroupKey = 'trigger' | 'transform' | 'flow' | 'integration' | 'ai';
+export type NodeGroupKey = 'trigger' | 'transform' | 'flow' | 'integration' | 'ai' | 'storage';
 
 /** CSS var for a node group's accent — use in inline style or via color-mix. */
 export const groupVar = (group: string): string => `var(--group-${group}, var(--accent))`;
@@ -18,6 +18,7 @@ export const GROUP_TEXT: Record<string, string> = {
   flow: 'text-group-flow',
   integration: 'text-group-integration',
   ai: 'text-group-ai',
+  storage: 'text-group-storage',
 };
 
 /** CSS var for a run/step status color. */
